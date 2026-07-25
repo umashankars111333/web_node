@@ -24,3 +24,16 @@ $env:MONGODB_COLLECTION="products"
 `POST http://localhost:3000/api/seed-products` connects to MongoDB Atlas and inserts 200 generated sample products. A successful response confirms that the connection and insert worked.
 
 `GET http://localhost:3000/api/slow-products` loads up to 1,000 records from MongoDB Atlas. This endpoint is intentionally implemented inefficiently by opening a new database connection for every request, so students can practice improving its response time.
+
+## Status-code exercise
+
+The intentionally incorrect examples are under `/api/status-exercises`:
+
+| Request | Current status | Students should consider |
+| --- | ---: | --- |
+| `GET /api/status-exercises/products/:id` with a missing product | `200` | `404 Not Found` |
+| Same endpoint with an invalid ID | `500` | `400 Bad Request` |
+| `POST /api/status-exercises/products` | `200` | `201 Created` |
+| `DELETE /api/status-exercises/products/:id` | `200` with a body | `204 No Content` |
+| `GET /api/status-exercises/admin/products` without authentication | `500` | `401 Unauthorized` |
+| `DELETE /api/status-exercises/admin/users/:id` without permission | `500` | `403 Forbidden` |
