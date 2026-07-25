@@ -17,7 +17,9 @@ $env:MONGODB_COLLECTION="products"
 
 ## Practice API
 
-`GET http://localhost:3000/api/products?page=1&limit=20` returns one page of products from MongoDB Atlas. The default page size is 20, and the maximum page size is 100.
+`GET http://localhost:3000/api/products?pagination=offset&offset=0&limit=20` uses offset pagination. The next page uses `offset=20`.
+
+`GET http://localhost:3000/api/products?limit=20` uses cursor pagination by default. Use the returned `nextCursor` value for the next request: `GET http://localhost:3000/api/products?limit=20&cursor=<nextCursor>`. The default limit is 20, and the maximum limit is 100.
 
 `POST http://localhost:3000/api/seed-products` connects to MongoDB Atlas and inserts 200 generated sample products. A successful response confirms that the connection and insert worked.
 
