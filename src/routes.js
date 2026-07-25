@@ -28,6 +28,14 @@ router.get('/api/orders', (_request, response) => {
   response.json(seedOrders);
 });
 
+router.get('/api/unsafe-products', async (_request, response) => {
+  const products = await withProductsCollection((collection) => (
+    collection.find({}).toArray()
+  ));
+
+  response.json(products);
+});
+
 router.use((_request, response) => {
   response.status(404).json({ error: 'Not found' });
 });

@@ -19,6 +19,8 @@ $env:MONGODB_COLLECTION="products"
 
 `GET http://localhost:3000/api/products?page=1&limit=20` returns one page of products from MongoDB Atlas. The default page size is 20, and the maximum page size is 100.
 
+`GET http://localhost:3000/api/unsafe-products` is intentionally written without route-level error handling. Use it as a debugging exercise and compare its behavior with `/api/products` when MongoDB is unavailable or misconfigured.
+
 `POST http://localhost:3000/api/seed-products` connects to MongoDB Atlas and inserts 200 generated sample products. A successful response confirms that the connection and insert worked.
 
 `GET http://localhost:3000/api/slow-products` loads up to 1,000 records from MongoDB Atlas. This endpoint is intentionally implemented inefficiently by opening a new database connection for every request, so students can practice improving its response time.
