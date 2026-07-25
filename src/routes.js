@@ -1,5 +1,8 @@
 const express = require('express');
+<<<<<<< Updated upstream
 const { ObjectId } = require('mongodb');
+=======
+>>>>>>> Stashed changes
 const { seedOrders } = require('./data');
 const { withProductsCollection } = require('./database');
 
@@ -97,6 +100,22 @@ router.get('/api/products', async (request, response) => {
 
 router.get('/api/orders', (_request, response) => {
   response.json(seedOrders);
+});
+
+router.get('/api/unsafe-products', async (_request, response) => {
+  try {
+    const products = await withProductsCollection((collection) => (
+      collection.find({}).toArray()
+    ));
+
+    response.json(products);
+  } catch (error) {
+    console.error('Unable to load unsafe products from MongoDB Atlas:', error.message);
+    response.status(500).json({
+      error: 'Unable to load unsafe products',
+      details: error.message,
+    });
+  }
 });
 
 router.use((_request, response) => {
