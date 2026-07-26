@@ -9,13 +9,46 @@ router.get('/', (_request, response) => {
   response.send('Express server is running');
 });
 
-router.get('/api/products', async (_request, response) => {
+router.get('/api/products', async (request, response) => {
   try {
+    const page = Number(request.query.page) || 1;
+    const limit = Number(request.query.limit) || 10;
+    const category = request.query.category || '';
+    const sortBy = request.query.sortBy || 'name';
+    const sortOrder = request.query.sortOrder === 'desc' ? -1 : 1;
+
     const result = await withProductsCollection(async (collection) => {
       const products = await collection.find({}).toArray();
       const total = await collection.countDocuments();
 
-      return { products, total };
+      let filteredProducts = products;
+      if (category) {
+        filteredProducts = products.filter((product) => product.category === category);
+      }
+
+      let sortedProducts = filteredProducts;
+      if (sortBy) {
+        sortedProducts = filteredProducts.sort((a, b) => {
+          if (a[sortBy] < b[sortBy]) return -1 * sortOrder;
+          if (a[sortBy] > b[sortBy]) return 1 * sortOrder;
+          return 0;
+        });
+      }
+
+      const startIndex = (page - 1) * limit;
+      const endIndex = startIndex + limit;
+      const pagedProducts = sortedProducts.slice(startIndex, endIndex);
+
+      return {
+        products: pagedProducts,
+        total,
+        page,
+        limit,
+        category,
+        sortBy,
+        sortOrder,
+        message: 'This route mixes too many concerns in one place'
+      };
     });
 
     response.json(result);
