@@ -1,8 +1,5 @@
 const express = require('express');
-<<<<<<< Updated upstream
 const { ObjectId } = require('mongodb');
-=======
->>>>>>> Stashed changes
 const { seedOrders } = require('./data');
 const { withProductsCollection } = require('./database');
 
