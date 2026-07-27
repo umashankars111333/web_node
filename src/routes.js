@@ -3,6 +3,7 @@ const { createSeedProducts, seedOrders } = require('./data');
 const { ObjectId } = require('mongodb');
 const { withProductsCollection } = require('./database');
 const { searchProductsController } = require('./controllers/productController');
+const { validateDummyToken } = require('./middleware/authMiddleware');
 
 const router = express.Router();
 
@@ -10,9 +11,9 @@ router.get('/', (_request, response) => {
   response.send('Express server is running');
 });
 
-router.get('/api/search/:name', searchProductsController);
+router.get('/api/search/:name', validateDummyToken, searchProductsController);
 
-router.get('/api/products', async (request, response) => {
+router.get('/api/products', validateDummyToken, async (request, response) => {
   try {
     const page = Number(request.query.page) || 1;
     const limit = Number(request.query.limit) || 10;
@@ -61,11 +62,11 @@ router.get('/api/products', async (request, response) => {
   }
 });
 
-router.get('/api/orders', (_request, response) => {
+router.get('/api/orders', validateDummyToken, (_request, response) => {
   response.json(seedOrders);
 });
 
-router.get('/api/unsafe-products', async (_request, response) => {
+router.get('/api/unsafe-products', validateDummyToken, async (_request, response) => {
   const products = await withProductsCollection((collection) => (
     collection.find({}).toArray()
   ));
