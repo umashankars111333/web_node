@@ -10,6 +10,14 @@ router.get('/', (_request, response) => {
 });
 
 router.get('/api/search/:name', async (request, response) => {
+  const token = request.headers['x-auth-token'] || request.headers.authorization;
+
+  if (!token) {
+    return response.status(401).json({
+      message: 'Unauthorized: token missing'
+    });
+  }
+
   const searchName = request.params.name?.trim();
 
   if (!searchName) {
@@ -53,6 +61,14 @@ router.get('/api/search/:name', async (request, response) => {
 });
 
 router.get('/api/products', async (request, response) => {
+  const token = request.headers['x-auth-token'] || request.headers.authorization;
+
+  if (!token) {
+    return response.status(401).json({
+      message: 'Unauthorized: token missing'
+    });
+  }
+
   try {
     const page = Number(request.query.page) || 1;
     const limit = Number(request.query.limit) || 10;
@@ -101,11 +117,27 @@ router.get('/api/products', async (request, response) => {
   }
 });
 
-router.get('/api/orders', (_request, response) => {
+router.get('/api/orders', (request, response) => {
+  const token = request.headers['x-auth-token'] || request.headers.authorization;
+
+  if (!token) {
+    return response.status(401).json({
+      message: 'Unauthorized: token missing'
+    });
+  }
+
   response.json(seedOrders);
 });
 
-router.get('/api/unsafe-products', async (_request, response) => {
+router.get('/api/unsafe-products', async (request, response) => {
+  const token = request.headers['x-auth-token'] || request.headers.authorization;
+
+  if (!token) {
+    return response.status(401).json({
+      message: 'Unauthorized: token missing'
+    });
+  }
+
   const products = await withProductsCollection((collection) => (
     collection.find({}).toArray()
   ));
