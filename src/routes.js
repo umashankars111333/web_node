@@ -129,6 +129,35 @@ router.get('/api/orders', (request, response) => {
   response.json(seedOrders);
 });
 
+router.get('/api/product-summary', async (request, response) => {
+  const token = request.headers['x-auth-token'] || request.headers.authorization;
+
+  if (!token) {
+    return response.status(401).json({
+      message: 'Unauthorized: token missing'
+    });
+  }
+
+  try {
+    const products = await withProductsCollection((collection) => (
+      collection.find({}).toArray()
+    ));
+
+    const totalProducts = products.length;
+    const inStockCount = products.filter((product) => product.stock > 0).length;
+    const averagePrice = products.reduce((sum, product) => sum + product.price, 0) / totalProducts;
+
+    response.json({
+      totalProducts,
+      inStockCount,
+      averagePrice
+    });
+  } catch (error) {
+    console.error('Product summary error:', error.message);
+    response.status(500).json({ error: 'Unable to load product summary' });
+  }
+});
+
 router.get('/api/unsafe-products', async (request, response) => {
   const token = request.headers['x-auth-token'] || request.headers.authorization;
 
