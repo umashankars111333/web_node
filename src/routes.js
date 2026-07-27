@@ -9,6 +9,49 @@ router.get('/', (_request, response) => {
   response.send('Express server is running');
 });
 
+router.get('/api/search/:name', async (request, response) => {
+  const searchName = request.params.name?.trim();
+
+  if (!searchName) {
+    return response.status(400).json({
+      message: 'Search name is required'
+    });
+  }
+
+  try {
+    const result = await withProductsCollection(async (collection) => {
+      const escapedName = searchName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+      const products = await collection.find({
+        name: {
+          $regex: escapedName,
+          $options: 'i'
+        }
+      }).toArray();
+
+      const formattedProducts = products.map((product) => ({
+        ...product,
+        formattedPrice: `₹${product.price}`,
+        inStock: typeof product.stock === 'number' ? product.stock > 0 : Boolean(product.inStock)
+      }));
+
+      return {
+        total: formattedProducts.length,
+        search: searchName,
+        products: formattedProducts
+      };
+    });
+
+    return response.status(200).json(result);
+  } catch (error) {
+    console.error('Search API Error:', error);
+
+    return response.status(500).json({
+      message: 'Unable to search products'
+    });
+  }
+});
+
 router.get('/api/products', async (request, response) => {
   try {
     const page = Number(request.query.page) || 1;
