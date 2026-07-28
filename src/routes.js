@@ -4,6 +4,7 @@ const { ObjectId } = require('mongodb');
 const { withProductsCollection } = require('./database');
 
 const router = express.Router();
+const { get: cacheGet, set: cacheSet } = require('./cache/redisClient');
 
 router.get('/', (_request, response) => {
   response.send('Express server is running');
@@ -57,6 +58,50 @@ router.get('/api/search/:name', async (request, response) => {
     return response.status(500).json({
       message: 'Unable to search products'
     });
+  }
+});
+
+router.get('/api/products/:id', async (request, response) => {
+  const token = request.headers['x-auth-token'] || request.headers.authorization;
+
+  if (!token) {
+    return response.status(401).json({
+      message: 'Unauthorized: token missing'
+    });
+  }
+
+  const id = String(request.params.id || '').trim();
+  if (!id) {
+    return response.status(400).json({ message: 'Product id is required' });
+  }
+
+  try {
+    const cacheKey = `product:${id}`;
+    const cached = await cacheGet(cacheKey);
+    if (cached) {
+      return response.json({ product: cached, source: 'cache' });
+    }
+
+    const product = await withProductsCollection(async (collection) => {
+      try {
+        return await collection.findOne({ _id: new ObjectId(id) });
+      } catch (e) {
+        // fallback to string id matches
+        return await collection.findOne({ _id: id });
+      }
+    });
+
+    if (!product) {
+      return response.status(404).json({ message: 'Product not found' });
+    }
+
+    // store in cache for next time
+    await cacheSet(cacheKey, product, 60);
+
+    return response.json({ product, source: 'db' });
+  } catch (error) {
+    console.error('Get product error:', error);
+    return response.status(500).json({ message: 'Unable to fetch product' });
   }
 });
 
@@ -130,22 +175,26 @@ router.get('/api/orders', (request, response) => {
 });
 
 router.get('/api/product-summary', async (request, response) => {
-  const token = request.headers['x-auth-token'] || request.headers.authorization;
+  // const token = request.headers['x-auth-token'] || request.headers.authorization;
 
-  if (!token) {
-    return response.status(401).json({
-      message: 'Unauthorized: token missing'
-    });
-  }
+  // if (!token) {
+  //   return response.status(401).json({
+  //     message: 'Unauthorized: token missing'
+  //   });
+  // }
 
   try {
     const products = await withProductsCollection((collection) => (
       collection.find({}).toArray()
     ));
-
+    console.log('Products:', products);
+    debugger;
     const totalProducts = products.length;
-    const inStockCount = products.filter((product) => product.stock > 0).length;
+    console.log('Total products:', totalProducts);
+    const inStockCount = products.filter((product) => product.stock > 0).length+1;
+    console.log('In stock count:', inStockCount);
     const averagePrice = products.reduce((sum, product) => sum + product.price, 0) / totalProducts;
+    console.log('Average price:', averagePrice);
 
     response.json({
       totalProducts,
